@@ -6,7 +6,7 @@ describe( "A Backbone-State-Machine,", function () {
         stateMachineConfigs,
         should = chai.should();
 
-    chai.Assertion.includeStack = false;
+    chai.Assertion.includeStack = true;
 
     beforeEach(function() {
         rawObject = {
@@ -88,11 +88,38 @@ describe( "A Backbone-State-Machine,", function () {
                 });
 
                 it("will succeed to a state that is allowed", function() {
-                    var failed = false;
+                    var succeed = false;
                     $sm.transition("closed").done(function() {
-                        failed = true;
+                        succeed = true;
                     });
-                    failed.should.be.true;
+                    succeed.should.be.true;
+                });
+
+                it("can be chained with promises", function() {
+
+                    var numCalls = 0;
+                    start
+                        .then(function() {
+                            ++numCalls;
+                            $sm.getCurrentState().should.equal("open");
+                            return $sm.transition("forbidden");}
+                        , function() {
+                            numCalls = -999;
+                        })
+                        .then(function() {
+                            numCalls = -999;}
+                        , function() {
+                            ++numCalls;
+                            $sm.getCurrentState().should.equal("open");
+                            return $sm.transition("closed");
+                        })
+                        .then(function() {
+                            ++numCalls;
+                            $sm.getCurrentState().should.equal("closed");}
+                        , function() {
+                            numCalls = -999;
+                        });
+                        numCalls.should.equal(3);
                 });
             });
         });

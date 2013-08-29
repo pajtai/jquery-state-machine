@@ -1,17 +1,17 @@
 {
-  "name": "backbone-state-machine",
+  "name": "jquery-state-machine",
   "description": "A Backbone View with a built in Finite State Machine",
-  "version": "0.0.7-inProgress",
+  "version": "0.0.1",
   "homepage": "",
   "repository": {
     "type": "git",
-    "url": "git://github.com/pajtai/backbone-state-machine.git"
+    "url": "git://github.com/pajtai/jquery-state-machine.git"
   },
   "author": "Peter Ajtai",
   "keywords": [],
   "bugs": {
     "email": "peter.ajtai@thinksolid.com",
-    "url": "http://github.com/pajtai/backbone-state-machine/issues"
+    "url": "http://github.com/pajtai/jquery-state-machine/issues"
   },
   "engines": {
     "node": ">=0.8.19"

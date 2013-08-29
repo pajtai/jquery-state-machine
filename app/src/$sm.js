@@ -49,8 +49,8 @@
         var $deferred = $.Deferred(),
             currentState = this.getCurrentState();
         if (! currentState
-            || $.contains(this.stateMachineConfigs.states[currentState]
-                .allowedTransitions, state)) {
+            || _isIn(state,
+                this.stateMachineConfigs.states[currentState].allowedTransitions)) {
             _setCurrentState.call(this, state);
             $deferred.resolve();
         } else {
@@ -65,6 +65,22 @@
         this.getCurrentState = function() {
             return state;
         }
+    }
+
+    function _isIn(needle, haystack) {
+        if (Array === haystack.constructor) {
+            return _isInArray(needle, haystack);
+        }
+    }
+
+    function _isInArray(needle, haystack) {
+        var i;
+        for (i=0; i<haystack.length; ++i) {
+            if (needle === haystack[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     if ( FUNCTION === typeof define && define.amd ) {
