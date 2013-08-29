@@ -26,12 +26,14 @@
 
     $SM = function(rawObject, stateMachineConfigs) {
         this.stateMachineConfigs = stateMachineConfigs;
+        // TODO: should rawObject be deep cloned?
         this.rawObject = rawObject;
     }
 
     $.extend($SM.prototype, {
         getStates: getStates,
-        getCurrentState: getCurrentState
+        getCurrentState: getCurrentState,
+        transition: transition
     });
 
     function getStates() {
@@ -40,7 +42,29 @@
     }
 
     function getCurrentState() {
+        // Dynamically set
+    }
 
+    function transition(state) {
+        var $deferred = $.Deferred(),
+            currentState = this.getCurrentState();
+        if (! currentState
+            || $.contains(this.stateMachineConfigs.states[currentState]
+                .allowedTransitions, state)) {
+            _setCurrentState.call(this, state);
+            $deferred.resolve();
+        } else {
+            $deferred.reject();
+        }
+        return $deferred.promise();
+    }
+
+    // Private methods hidden in closure: must be called or applied to bind context
+    function _setCurrentState(state) {
+
+        this.getCurrentState = function() {
+            return state;
+        }
     }
 
     if ( FUNCTION === typeof define && define.amd ) {
