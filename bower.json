@@ -1,0 +1,18 @@
+{
+  "name": "backbone-state-machine",
+  "version": "0.0.7-inProgress",
+  "dependencies": {
+    "underscore": "~1.5.1",
+    "backbone": "~1.0.0",
+    "jquery": "~2.0.3"
+  },
+  "devDependencies" : {
+    "bootstrap": "~2.3.2",
+    "chai": "~1.7.2",
+    "mocha": "~1.12.0",
+    "sinon": "~1.7.3",
+    "sinon-chai": "~2.4.0",
+    "requirejs": "~2.1.5",
+    "requirejs-text": "~2.0.5"
+  }
+}
