@@ -6,7 +6,8 @@ describe( "A Backbone-State-Machine,", function () {
         stateMachineConfigs,
         should = chai.should();
 
-    chai.Assertion.includeStack = true;
+    //chai.Assertion.includeStack = true;
+    chai.Assertion.includeStack = false;
 
     beforeEach(function() {
         rawObject = {
@@ -18,6 +19,9 @@ describe( "A Backbone-State-Machine,", function () {
             },
             walkThrough: function() {
                 console.log("walkThrough");
+            },
+            extra: function() {
+
             }
         }
         stateMachineConfigs = {
@@ -123,7 +127,29 @@ describe( "A Backbone-State-Machine,", function () {
                 });
             });
         });
-
+        describe("methods not described on the state machine config"
+        , function() {
+            it("are avialable after initializiation in the absence of state"
+            , function() {
+                should.exist($sm.extra);
+            });
+        });
+        describe("methods described on the state machine config", function() {
+            it("are not available after initialization in the absence of state"
+            , function() {
+                should.not.exist($sm.lock);
+                should.not.exist($sm.unlock);
+                should.not.exist($sm.walkthrough);
+            });
+            describe("that are defined for a state", function() {
+                beforeEach(function() {
+                    $sm.transition("open");
+                });
+                it("are available on transition to that state", function() {
+                    should.exist($sm.walkThrough);
+                });
+            });
+        });
     })
 
 

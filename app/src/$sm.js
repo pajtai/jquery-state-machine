@@ -28,12 +28,15 @@
         this.stateMachineConfigs = stateMachineConfigs;
         // TODO: should rawObject be deep cloned?
         this.rawObject = rawObject;
+        this.attachMethodsAndFields();
     }
 
     $.extend($SM.prototype, {
         getStates: getStates,
         getCurrentState: getCurrentState,
-        transition: transition
+        transition: transition,
+        attachMethodsAndFields: attachMethodsAndFields,
+        attachMethodsForState: attachMethodsForState
     });
 
     function getStates() {
@@ -52,11 +55,39 @@
             || _isIn(state,
                 this.stateMachineConfigs.states[currentState].allowedTransitions)) {
             _setCurrentState.call(this, state);
+            this.attachMethodsForState(state);
             $deferred.resolve();
         } else {
             $deferred.reject();
         }
         return $deferred.promise();
+    }
+
+
+    function attachMethodsAndFields() {
+        var item,
+            allowedMethods = _getAllAllowedMethods.call(this);
+
+        for (item in this.rawObject) {
+            if (this.rawObject.hasOwnProperty(item) && ! _isIn(item, allowedMethods)) {
+                this[item] = this.rawObject[item];
+            }
+        }
+        return this;
+    }
+
+    function attachMethodsForState(state) {
+        var method,
+            allowedMethods,
+            i;
+        allowedMethods = this.stateMachineConfigs.states[state].allowedMethods;
+        if (!allowedMethods) {
+            return this;
+        }
+        for(i=0; i<allowedMethods.length; ++i) {
+            this[allowedMethods[i]] = this.rawObject[allowedMethods[i]];
+        }
+        return this;
     }
 
     // Private methods hidden in closure: must be called or applied to bind context
@@ -65,6 +96,23 @@
         this.getCurrentState = function() {
             return state;
         }
+    }
+
+    function _getAllAllowedMethods() {
+        var oneState,
+            allStates = this.stateMachineConfigs.states,
+            i,
+            allMethods = [];
+        for (oneState in allStates) {
+            if (allStates.hasOwnProperty(oneState)) {
+                if (allStates[oneState].allowedMethods) {
+                    for (i=0; i<allStates[oneState].allowedMethods.length; ++i) {
+                        allMethods.push(allStates[oneState].allowedMethods[i]);
+                    }
+                }
+            }
+        }
+        return allMethods;
     }
 
     function _isIn(needle, haystack) {

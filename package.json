@@ -1,6 +1,6 @@
 {
   "name": "jquery-state-machine",
-  "description": "A Backbone View with a built in Finite State Machine",
+  "description": "A Finite State Machine that depends on jQuery",
   "version": "0.0.1",
   "homepage": "",
   "repository": {
