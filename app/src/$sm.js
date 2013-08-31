@@ -28,15 +28,14 @@
         this.stateMachineConfigs = stateMachineConfigs;
         // TODO: should rawObject be deep cloned?
         this.rawObject = rawObject;
-        this.attachMethodsAndFields();
+        _attachMethodsAndFields.call(this);
+        _detachMethods.call(this);
     }
 
     $.extend($SM.prototype, {
         getStates: getStates,
         getCurrentState: getCurrentState,
         transition: transition,
-        attachMethodsAndFields: attachMethodsAndFields,
-        attachMethodsForState: attachMethodsForState
     });
 
     function getStates() {
@@ -55,7 +54,8 @@
             || _isIn(state,
                 this.stateMachineConfigs.states[currentState].allowedTransitions)) {
             _setCurrentState.call(this, state);
-            this.attachMethodsForState(state);
+            _detachMethods.call(this);
+            _attachMethodsForState.call(this, state);
             $deferred.resolve();
         } else {
             $deferred.reject();
@@ -64,7 +64,15 @@
     }
 
 
-    function attachMethodsAndFields() {
+    // Private methods hidden in closure: must be called or applied to bind context
+    function _setCurrentState(state) {
+
+        this.getCurrentState = function() {
+            return state;
+        }
+    }
+
+    function _attachMethodsAndFields() {
         var item,
             allowedMethods = _getAllAllowedMethods.call(this);
 
@@ -76,7 +84,7 @@
         return this;
     }
 
-    function attachMethodsForState(state) {
+    function _attachMethodsForState(state) {
         var method,
             allowedMethods,
             i;
@@ -90,11 +98,24 @@
         return this;
     }
 
-    // Private methods hidden in closure: must be called or applied to bind context
-    function _setCurrentState(state) {
-
-        this.getCurrentState = function() {
-            return state;
+    function _detachMethods() {
+        var oneState,
+            allStates = this.stateMachineConfigs.states,
+            i,
+            oneMethod;
+        for (oneState in allStates) {
+            if (allStates.hasOwnProperty(oneState)) {
+                if (allStates[oneState].allowedMethods) {
+                    for (i=0; i<allStates[oneState].allowedMethods.length; ++i) {
+                        oneMethod = allStates[oneState].allowedMethods[i];
+                        this[oneMethod] = function() {
+                            var $deferred = new $.Deferred();
+                            $deferred.reject();
+                            return $deferred.promise();
+                        }
+                    }
+                }
+            }
         }
     }
 
