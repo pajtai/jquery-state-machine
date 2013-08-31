@@ -85,8 +85,7 @@
     }
 
     function _attachMethodsForState(state) {
-        var method,
-            allowedMethods,
+        var allowedMethods,
             i;
         allowedMethods = this.stateMachineConfigs.states[state].allowedMethods;
         if (!allowedMethods) {
@@ -99,6 +98,22 @@
     }
 
     function _detachMethods() {
+        _runOnAllAllowedMethodStrings.call(this, function(oneMethod) {
+            this[oneMethod] = function() {
+                var $deferred = new $.Deferred();
+                $deferred.reject();
+                return $deferred.promise();
+            }
+        });
+    }
+
+    /**
+     * Pass in a $SM method, and it will be called with all methods as strings
+     * from the state machine config object.
+     * @param method
+     * @private
+     */
+    function _runOnAllAllowedMethodStrings(method) {
         var oneState,
             allStates = this.stateMachineConfigs.states,
             i,
@@ -108,11 +123,7 @@
                 if (allStates[oneState].allowedMethods) {
                     for (i=0; i<allStates[oneState].allowedMethods.length; ++i) {
                         oneMethod = allStates[oneState].allowedMethods[i];
-                        this[oneMethod] = function() {
-                            var $deferred = new $.Deferred();
-                            $deferred.reject();
-                            return $deferred.promise();
-                        }
+                        method.call(this, oneMethod);
                     }
                 }
             }
@@ -124,15 +135,9 @@
             allStates = this.stateMachineConfigs.states,
             i,
             allMethods = [];
-        for (oneState in allStates) {
-            if (allStates.hasOwnProperty(oneState)) {
-                if (allStates[oneState].allowedMethods) {
-                    for (i=0; i<allStates[oneState].allowedMethods.length; ++i) {
-                        allMethods.push(allStates[oneState].allowedMethods[i]);
-                    }
-                }
-            }
-        }
+        _runOnAllAllowedMethodStrings.call(this, function(oneMethod) {
+            allMethods.push(oneMethod);
+        });
         return allMethods;
     }
 
