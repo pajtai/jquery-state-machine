@@ -9,6 +9,15 @@ describe( "A Backbone-State-Machine,", function () {
     //chai.Assertion.includeStack = true;
     chai.Assertion.includeStack = false;
 
+    function isRejectedPromise(promise) {
+        var rejected = false;
+        promise.fail(function() {
+            rejected = true;
+        });
+        should.not.exist(promise.reject);
+        rejected.should.be.true;
+    }
+
     beforeEach(function() {
         rawObject = {
             lock: function() {
@@ -129,24 +138,44 @@ describe( "A Backbone-State-Machine,", function () {
         });
         describe("methods not described on the state machine config"
         , function() {
-            it("are avialable after initializiation in the absence of state"
+            it("are available after initializiation in the absence of state"
             , function() {
                 should.exist($sm.extra);
             });
         });
         describe("methods described on the state machine config", function() {
-            it("are not available after initialization in the absence of state"
+            it("are rejected promises after initialization in the absence of state"
             , function() {
-                should.not.exist($sm.lock);
-                should.not.exist($sm.unlock);
-                should.not.exist($sm.walkthrough);
+                isRejectedPromise($sm.lock());
+                isRejectedPromise($sm.unlock());
+                isRejectedPromise($sm.walkThrough());
             });
-            describe("that are defined for a state", function() {
+
+            it("are available as rejected promises after switching away from a state they are defined on", function() {
+                $sm.transition("open");
+                $sm.transition("closed");
+                isRejectedPromise($sm.walkThrough());
+            });
+
+
+            describe("that are", function() {
                 beforeEach(function() {
                     $sm.transition("open");
                 });
-                it("are available on transition to that state", function() {
-                    should.exist($sm.walkThrough);
+                describe("not defined for the current state", function() {
+                    it("returns a rejected promise", function() {
+                        var failed = false;
+                        $sm.lock().fail(function() {
+                            failed = true;
+                        });
+                        failed.should.be.true;
+                    });
+                });
+
+                describe("defined for a state", function() {
+                    it("are available on transition to that state", function() {
+                        should.exist($sm.walkThrough);
+                    });
                 });
             });
         });

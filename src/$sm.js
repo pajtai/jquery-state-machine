@@ -28,15 +28,18 @@
         this.stateMachineConfigs = stateMachineConfigs;
         // TODO: should rawObject be deep cloned?
         this.rawObject = rawObject;
-        this.attachMethodsAndFields();
+        this.channels = {
+            transitions: $("<div/>"),
+            methodCalls: $("<div/>")
+        };
+        _attachMethodsAndFields.call(this);
+        _detachMethods.call(this);
     }
 
     $.extend($SM.prototype, {
         getStates: getStates,
         getCurrentState: getCurrentState,
         transition: transition,
-        attachMethodsAndFields: attachMethodsAndFields,
-        attachMethodsForState: attachMethodsForState
     });
 
     function getStates() {
@@ -55,7 +58,8 @@
             || _isIn(state,
                 this.stateMachineConfigs.states[currentState].allowedTransitions)) {
             _setCurrentState.call(this, state);
-            this.attachMethodsForState(state);
+            _detachMethods.call(this);
+            _attachMethodsForState.call(this, state);
             $deferred.resolve();
         } else {
             $deferred.reject();
@@ -64,7 +68,15 @@
     }
 
 
-    function attachMethodsAndFields() {
+    // Private methods hidden in closure: must be called or applied to bind context
+    function _setCurrentState(state) {
+
+        this.getCurrentState = function() {
+            return state;
+        }
+    }
+
+    function _attachMethodsAndFields() {
         var item,
             allowedMethods = _getAllAllowedMethods.call(this);
 
@@ -76,9 +88,8 @@
         return this;
     }
 
-    function attachMethodsForState(state) {
-        var method,
-            allowedMethods,
+    function _attachMethodsForState(state) {
+        var allowedMethods,
             i;
         allowedMethods = this.stateMachineConfigs.states[state].allowedMethods;
         if (!allowedMethods) {
@@ -90,11 +101,36 @@
         return this;
     }
 
-    // Private methods hidden in closure: must be called or applied to bind context
-    function _setCurrentState(state) {
+    function _detachMethods() {
+        _runOnAllAllowedMethodStrings.call(this, function(oneMethod) {
+            this[oneMethod] = function() {
+                var $deferred = new $.Deferred();
+                $deferred.reject();
+                return $deferred.promise();
+            }
+        });
+    }
 
-        this.getCurrentState = function() {
-            return state;
+    /**
+     * Pass in a $SM method, and it will be called with all methods as strings
+     * from the state machine config object.
+     * @param method
+     * @private
+     */
+    function _runOnAllAllowedMethodStrings(method) {
+        var oneState,
+            allStates = this.stateMachineConfigs.states,
+            i,
+            oneMethod;
+        for (oneState in allStates) {
+            if (allStates.hasOwnProperty(oneState)) {
+                if (allStates[oneState].allowedMethods) {
+                    for (i=0; i<allStates[oneState].allowedMethods.length; ++i) {
+                        oneMethod = allStates[oneState].allowedMethods[i];
+                        method.call(this, oneMethod);
+                    }
+                }
+            }
         }
     }
 
@@ -103,15 +139,9 @@
             allStates = this.stateMachineConfigs.states,
             i,
             allMethods = [];
-        for (oneState in allStates) {
-            if (allStates.hasOwnProperty(oneState)) {
-                if (allStates[oneState].allowedMethods) {
-                    for (i=0; i<allStates[oneState].allowedMethods.length; ++i) {
-                        allMethods.push(allStates[oneState].allowedMethods[i]);
-                    }
-                }
-            }
-        }
+        _runOnAllAllowedMethodStrings.call(this, function(oneMethod) {
+            allMethods.push(oneMethod);
+        });
         return allMethods;
     }
 
