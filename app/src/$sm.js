@@ -28,6 +28,10 @@
         this.stateMachineConfigs = stateMachineConfigs;
         // TODO: should rawObject be deep cloned?
         this.rawObject = rawObject;
+        this.channels = {
+            transitions: $("<div/>"),
+            methodCalls: $("<div/>")
+        };
         _attachMethodsAndFields.call(this);
         _detachMethods.call(this);
     }
